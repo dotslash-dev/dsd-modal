@@ -1,0 +1,359 @@
+$sp: 960px;
+$pc: calc($sp + 1px);
+
+@mixin mq($device) {
+  @if $device == pc {
+    @media screen and (min-width: $pc) {
+      @content;
+    }
+  } @else if $device == sp {
+    @media screen and (max-width: $sp) {
+      @content;
+    }
+  }
+}
+
+@function modal($key, $bp: pc) {
+  $value: map-get($modal-setting-map, $key);
+  @if type-of($value) == "map" {
+    $bp-value: map-get($value, $bp);
+    @return $bp-value;
+  }
+  @return $value;
+}
+
+$modal-setting-map: (
+  showAnimDuration: 0.4s,
+  closeAnimDuration: 0.2s,
+  animTranslate: 20px,
+  modalBgColor: rgba(0, 0, 0, 0.6),
+  innerMinWidth: 20vw,
+  innerMaxWidth: 80vw,
+  innerMinHeight: 20vh,
+  innerMaxHeight: 90vh,
+  innerBorderRadius: 6px,
+  innerBgColor: #fff,
+  innerShadow: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2)),
+  contentPadding: 5vw,
+  closeButtonPointerSize: (
+    pc: 40px,
+    sp: 30px,
+  ),
+  closeButtonIconSize: 40%,
+  closeButtonThickness: 2px,
+  closeButtonPositionTop: (
+    pc: 10px,
+    sp: 0,
+  ),
+  closeButtonPositionRight: (
+    pc: 10px,
+    sp: 0,
+  ),
+  closeButtonColor: #000,
+  navArrowSize: 3vw,
+  navArrowThickness: 2px,
+  navArrowPositionX: 2.5vw,
+  navArrowColor: #fff,
+);
+
+body {
+  &.is-modal-open {
+    overflow: hidden;
+  }
+}
+
+.modal-container {
+  display: none;
+  &.is-modal-active {
+    z-index: 9999;
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    .modal-inner {
+      animation: showModalContent modal(showAnimDuration) 1 ease-out forwards;
+    }
+    &-from {
+      &-right {
+        .modal-inner {
+          animation: showModalContentFromRight modal(showAnimDuration) 1
+            ease-out forwards;
+        }
+      }
+      &-left {
+        .modal-inner {
+          animation: showModalContentFromLeft modal(showAnimDuration) 1 ease-out
+            forwards;
+        }
+      }
+    }
+  }
+  &.is-modal-closing {
+    .modal-inner {
+      animation: closingModalContent modal(closeAnimDuration) 1 ease-out
+        forwards;
+    }
+    &-to {
+      &-left {
+        .modal-inner {
+          animation: closingModalContentToLeft modal(closeAnimDuration) 1
+            ease-in forwards;
+        }
+      }
+      &-right {
+        .modal-inner {
+          animation: closingModalContentToRight modal(closeAnimDuration) 1
+            ease-in forwards;
+        }
+      }
+    }
+    .modal-close {
+      animation: closingModalBg modal(closeAnimDuration) 1 ease forwards;
+    }
+  }
+
+  .modal-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: modal(innerMinWidth);
+    max-width: modal(innerMaxWidth);
+    min-height: modal(innerMinHeight);
+    max-height: modal(innerMaxHeight);
+    margin: 0 auto;
+    background: modal(innerBgColor);
+    border-radius: modal(innerBorderRadius);
+    filter: modal(innerShadow);
+    pointer-events: all;
+    overflow: hidden;
+    min-width: modal(inner-min-width);
+    @include mq(sp) {
+      min-width: modal(inner-min-width, sp);
+    }
+  }
+
+  .modal-content {
+    flex: 1;
+    min-height: 0;
+    padding: modal(contentPadding);
+    overflow: auto;
+    img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  }
+  .modal-close {
+    z-index: 9999;
+    position: absolute;
+    top: modal(closeButtonPositionTop);
+    right: modal(closeButtonPositionRight);
+    width: modal(closeButtonPointerSize);
+    height: modal(closeButtonPointerSize);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    text-indent: -9999px;
+    pointer-events: all;
+    padding: 0;
+    @include mq(sp) {
+      width: modal(closeButtonPointerSize, sp);
+      height: modal(closeButtonPointerSize, sp);
+      top: modal(closeButtonPositionTop, sp);
+      right: modal(closeButtonPositionRight, sp);
+    }
+    &:before,
+    &:after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: modal(closeButtonIconSize);
+      height: modal(closeButtonThickness);
+      margin: auto;
+      background: modal(closeButtonColor);
+      content: "";
+    }
+    &:before {
+      transform: rotate(45deg);
+    }
+    &:after {
+      transform: rotate(-45deg);
+    }
+  }
+  .modal-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    &--prev,
+    &--next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      appearance: none;
+      z-index: 9998;
+      width: modal(navArrowSize);
+      height: modal(navArrowSize);
+      border: none;
+      outline: none;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: all;
+      &:before {
+        display: block;
+        position: absolute;
+        top: calc(modal(navArrowSize) / 4);
+        width: calc(modal(navArrowSize) / 2);
+        height: calc(modal(navArrowSize) / 2);
+        border-bottom: modal(navArrowThickness) solid modal(navArrowColor);
+        content: "";
+      }
+    }
+    &--prev {
+      left: modal(navArrowPositionX);
+      &:before {
+        transform: rotate(45deg);
+        left: calc(modal(navArrowSize) / 4 + modal(navArrowThickness));
+        border-left: modal(navArrowThickness) solid modal(navArrowColor);
+      }
+    }
+    &--next {
+      right: modal(navArrowPositionX);
+      &:before {
+        transform: rotate(-45deg);
+        left: calc(modal(navArrowSize) / 4 - modal(navArrowThickness));
+        border-right: modal(navArrowThickness) solid modal(navArrowColor);
+      }
+    }
+  }
+}
+
+.modal-bg {
+  z-index: 9998;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: modal(modalBgColor);
+  &:not(.is-bg-kept) {
+    animation: showModal modal(showAnimDuration) 1 ease-out forwards;
+  }
+  &.is-modal-closing {
+    animation: closingModalBg modal(closeAnimDuration) 1 ease-out forwards;
+  }
+}
+@keyframes showModal {
+  0% {
+    display: none;
+    opacity: 0;
+  }
+  1% {
+    display: block;
+    opacity: 0;
+  }
+  100% {
+    display: block;
+    opacity: 1;
+  }
+}
+
+@keyframes showModalContent {
+  0% {
+    display: none;
+    opacity: 0;
+    translate: 0 modal(animTranslate);
+  }
+  1% {
+    display: flex;
+    opacity: 0;
+    translate: 0 modal(animTranslate);
+  }
+  100% {
+    display: flex;
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes showModalContentFromLeft {
+  0% {
+    display: none;
+    opacity: 0;
+    translate: calc(modal(animTranslate) * -1) 0;
+  }
+  1% {
+    display: flex;
+    opacity: 0;
+    translate: calc(modal(animTranslate) * -1) 0;
+  }
+  100% {
+    display: flex;
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes showModalContentFromRight {
+  0% {
+    display: none;
+    opacity: 0;
+    translate: modal(animTranslate) 0;
+  }
+  1% {
+    display: flex;
+    opacity: 0;
+    translate: modal(animTranslate) 0;
+  }
+  100% {
+    display: flex;
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes closingModalContent {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 modal(animTranslate);
+  }
+}
+
+@keyframes closingModalContentToLeft {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(modal(animTranslate) * -1) 0;
+  }
+}
+
+@keyframes closingModalContentToRight {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: modal(animTranslate) 0;
+  }
+}
+
+@keyframes closingModalBg {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

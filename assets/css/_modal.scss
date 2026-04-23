@@ -127,10 +127,6 @@ body {
     filter: modal(innerShadow);
     pointer-events: all;
     overflow: hidden;
-    min-width: modal(inner-min-width);
-    @include mq(sp) {
-      min-width: modal(inner-min-width, sp);
-    }
   }
 
   .modal-content {
